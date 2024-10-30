@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Цена USDT/RUB</title>
+</head>
+<body>
+
+    <h1>Информация о курсах конверсии USDT и RUB:</h1>
+
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    {% if page == 'usdt_to_rub' %}
+        <h2>Текущая цена USDT/RUB</h2>
+        {% if price1 %}
+            <p>Текущая цена USDT/RUB: {{ price1 }}</p>
+        {% else %}
+            <p>Не удалось получить цену</p>
+        {% endif %}
+    {% elif page == 'rub_to_usdt' %}
+        <h2>Текущая цена RUB/USDT</h2>
+        {% if price2 %}
+            <p>Текущая цена RUB/USDT: {{ price2 }}</p>
+        {% else %}
+            <p>Не удалось получить цену</p>
+        {% endif %}
+    {% endif %}
+
+    <nav>
+        <ul>
+            <li><a href="/">Информация о криптобирже</a></li>
+        </ul>
+    </nav>
+
+</body>
+</html>
