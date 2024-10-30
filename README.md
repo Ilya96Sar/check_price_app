@@ -38,17 +38,16 @@
 
    ```bash
    git clone https://github.com/Ilya96Sar/check_price_app.git
+
+2. **Перейдите в каталог проекта:**
+
+   ```bash
    cd check_price_app
 
-2. **Распакуйте Docker-образ:**
+3. **Постройте Docker образ:**
 
    ```bash
-   unrar x check_price_app.rar
-
-3. **Загрузите образ в Docker:**
-
-   ```bash
-   docker load -i check_price_app.tar
+   docker build -t check_price_app .
 
 4. **Запустите контейнер:**
 
