@@ -54,10 +54,18 @@
    ```bash
    docker run -d --env-file .env -p 5000:5000 --name flask_api_app check_price_app_v2
 
-3. **Перейдите в браузере по адресу:**
+5. **Перейдите в браузере по адресу:**
 
    http://localhost:5000/<маршрут из описания>, чтобы увидеть веб-интерфейс приложения.
 
+6. **Откройте Postman и выполните:**
+
+    Курс конверсии USDT/RUB:
+   GET Запрос: http://localhost:5000/api/usdttorub
+   
+    Курс конверсии RUB/USDT:
+   GET Запрос: http://localhost:5000/api/rubtousdt
+    
 ### Для скачивания Docker-образа и запуска приложения:
 
 Вы можете скачать Docker-образ из Docker Hub. Для этого выполните следующую команду:
