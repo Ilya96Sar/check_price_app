@@ -1,38 +1,32 @@
-from flask import Flask, render_template, redirect
+from flask import Flask, render_template, redirect, jsonify
 from get_price_ticker import get_usdt_rub_price, get_rub_usdt_price
-from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime
 import signal
+from flask_caching import Cache
+from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
 import sys
+
+load_dotenv()  # Загружаем переменные окружения из .env файла
+
+# Класс конфигурации с Pydantic, без значений по умолчанию
+class Config(BaseSettings):
+    CACHE_TYPE: str
+    CACHE_DEFAULT_TIMEOUT: int
+
+    class Config:
+        env_file = ".env"
+        env_file_encoding = 'utf-8'
+
+# Создаём экземпляр конфигурации
+config = Config()
 
 app = Flask(__name__)
 
-# Глобальные переменные для хранения курса валют
-latest_usdt_to_rub = None
-latest_rub_to_usdt = None
-scheduler_started = False
-last_update_usdt_rub = None
-last_update_rub_usdt = None
+# Загружаем конфигурацию в Flask из Pydantic Config
+app.config.from_mapping(config.dict())
 
-# Функция для обновления курса USDT/RUB
-def update_usdt_rub():
-    global last_update_usdt_rub
-    price, error_code = get_usdt_rub_price()
-    if error_code is None:
-        last_update_usdt_rub = datetime.utcnow()
-        app.logger.info(f"Курс обновлен: {price}, последнее обновление: {last_update_usdt_rub}")
-    else:
-        app.logger.error(f"Ошибка при обновлении курса: {error_code}")
-
-# Функция для обновления курса RUB/USDT
-def update_rub_usdt():
-    global latest_rub_to_usdt
-    price, error_code = get_rub_usdt_price()
-    if error_code is None:
-        last_update_rub_usdt = datetime.utcnow()
-        app.logger.info(f"Курс обновлен: {price}, последнее обновление: {last_update_rub_usdt}")
-    else:
-        app.logger.error(f"Ошибка при обновлении курса: {error_code}")
+# Инициализация кэша
+cache = Cache(app)
 
 # Маршрут для курса конверсии USDT/RUB
 @app.route('/usdtrub')
@@ -55,37 +49,53 @@ def rub_to_usdt():
 def info_binance():
     return redirect("https://www.binance.com", code=302)
 
+
+
+# Обработчик ошибки 400 (Неправильный запрос)
+@app.errorhandler(400)
+def bad_request(error):
+    return jsonify({"error": "Bad Request", "message": "Запрос не может быть разобран или в нем "
+                                                       "отсутствуют необходимые параметры"}), 400
+
+# Обработчик ошибки 404 (Страница не найдена)
 @app.errorhandler(404)
-def page_not_found(e):
-    return render_template('index.html', error="Страница не найдена"), 404
+def not_found(error):
+    return jsonify({"error": "Not Found", "message": "Запрошенный ресурс не найден"}), 404
 
-# Инициализация и настройка BackgroundScheduler для запуска обновлений
-scheduler = BackgroundScheduler()
-scheduler.add_job(update_usdt_rub, 'interval', minutes=1)  # Запуск обновления USDT/RUB каждую минуту
-scheduler.add_job(update_rub_usdt, 'interval', minutes=1)  # Запуск обновления RUB/USDT каждую минуту
-scheduler.start()
+# Обработчик ошибки 405 (Метод не разрешён)
+@app.errorhandler(405)
+def method_not_allowed(error):
+    return jsonify({"error": "Method Not Allowed", "message": "Метод недопустим для запрошенного URL"}), 405
 
-# Инициализация BackgroundScheduler при первом запросе
-@app.before_request
-def setup_scheduler():
-    global scheduler_started
-    if not scheduler_started:
-        scheduler = BackgroundScheduler()
-        scheduler.add_job(update_usdt_rub, 'interval', minutes=1)
-        scheduler.add_job(update_rub_usdt, 'interval', minutes=1)
-        scheduler.start()
-        scheduler_started = True
-        app.logger.info("Запуск фонового обновления курса валют")
+# Обработчик ошибки 429 (Слишком много запросов)
+@app.errorhandler(429)
+def too_many_requests(error):
+    return jsonify({"error": "Too Many Requests", "message": "Вы превысили лимит запросов"}), 429
 
-def shutdown_scheduler():
-    global scheduler
-    if scheduler_started:
-        scheduler.shutdown()
-        app.logger.info("Шедулер остановлен")
+
+@app.route('/api/usdttorub', methods=['GET'])
+@cache.cached(timeout=config.CACHE_DEFAULT_TIMEOUT)
+def func_usdtrub():
+    price = get_usdt_rub_price()
+    if price is None:
+        return jsonify({"Курс": "Цена недоступна"}), 404
+    return jsonify({"Курс конверсии USDT/RUB": price})
+
+@app.route('/api/rubtousdt', methods=['GET'])
+@cache.cached(timeout=config.CACHE_DEFAULT_TIMEOUT)
+def func_rubusdt():
+    price = get_rub_usdt_price()
+    if price is None:
+        return jsonify({"Курс": "Цена недоступна"}), 404
+    return jsonify({"Курс конверсии RUB/USDT": price})
+
+def graceful_exit(signum, frame):
+    print("Завершение работы приложения...")
+    sys.exit(0)
 
 # Обработка сигналов для остановки приложения
-signal.signal(signal.SIGINT, lambda s, f: shutdown_scheduler())
-signal.signal(signal.SIGTERM, lambda s, f: shutdown_scheduler())
+signal.signal(signal.SIGINT, graceful_exit)
+signal.signal(signal.SIGTERM, graceful_exit)
 
 # Запуск приложения
 if __name__ == "__main__":

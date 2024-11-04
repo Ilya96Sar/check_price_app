@@ -10,8 +10,11 @@ COPY . /app
 # Создаём директорию для логов
 RUN mkdir -p /app/logs
 
+# Копируем файл зависимостей в контейнер
+COPY requirements.txt .
+
 # Устанавливаем зависимости
-RUN pip install --no-cache-dir Flask requests APScheduler
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Указываем команду для запуска приложения
 CMD ["python3", "app.py"]
