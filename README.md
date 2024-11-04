@@ -52,7 +52,7 @@
 4. **Запустите контейнер:**
 
    ```bash
-   docker run -d --env-file .env -p 5000:5000 --name flask_api_appp check_price_app_v2
+   docker run -d --env-file .env -p 5000:5000 --name flask_api_app check_price_app_v2
 
 3. **Перейдите в браузере по адресу:**
 
