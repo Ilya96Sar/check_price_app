@@ -90,3 +90,11 @@ Binance API – получение данных о курсах валют.
 ## OpenApi Схема
 
 В каталоге находится файл openapi_app.json c API Описанием
+
+## Варианты запросов и ответов
+
+![Screenshot_1](https://github.com/user-attachments/assets/7745063a-af7e-42d7-88f4-c87ee9c36ef8)
+
+![Screenshot_2](https://github.com/user-attachments/assets/0b088ba8-b8ec-4669-ab87-ddc77a75f158)
+
+![Screenshot_3](https://github.com/user-attachments/assets/85260c75-4f41-4770-a1e4-04da3ab9f673)
