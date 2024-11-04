@@ -52,7 +52,7 @@
 4. **Запустите контейнер:**
 
    ```bash
-   docker run -d -p 5000:5000 --name flask_app check_price_app
+   docker run -d --env-file .env -p 5000:5000 --name flask_api_appp check_price_app_v2
 
 3. **Перейдите в браузере по адресу:**
 
@@ -68,14 +68,14 @@
 Чтобы запустить приложение, выполните следующую команду:
 
     ```bash
-    docker run -d --name flask_api_app -p 5000:5000 ilya96sar/check_price_app:latest
+    docker run -d --env-file .env --name flask_api_app -p 5000:5000 ilya96sar/check_price_app_v2:latest
 
 ## 📄 Логирование
 
 Приложение сохраняет логи в папке app/logs внутри контейнера. Если вы хотите вывести логи в директорию хоста, используйте флаг -v при запуске контейнера:
 
     ```bash
-    docker run -d -p 5000:5000 --name flask_app -v ~/log:/app/logs check_price_app
+    docker run -d -p 5000:5000 --name flask_api_app -v ~/log:/app/logs check_price_app
 
 ## 📄 ⚙️ Подключение и конфигурация
 
